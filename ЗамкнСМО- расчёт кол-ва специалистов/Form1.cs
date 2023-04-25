@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows.Forms;
 
 namespace ЗамкнСМО__расчёт_кол_ва_специалистов
@@ -20,8 +21,8 @@ namespace ЗамкнСМО__расчёт_кол_ва_специалистов
 
         private void Button_Grafik_Click(object sender, EventArgs e)
         {
-            double a = 1, b = 10, h = 1;
-            double ρ, Pk, k, sum, P0;
+            int a = 1, b = 10, h = 1, k;
+            double ρ, Pk, sum, P0;
             n = Convert.ToDouble(textBox_n.Text);
             λ = Convert.ToDouble(textBox_λ.Text);
             N = Convert.ToDouble(textBox_Nh.Text);
@@ -35,67 +36,21 @@ namespace ЗамкнСМО__расчёт_кол_ва_специалистов
                 ρ = (λ / hours) * Tp;
                 sum = 0;
                 k = 1;
-                double P1 = 0, P2 = 0, P3 = 0, P4 = 0, P5 = 0, P6 = 0, P7 = 0;
+                Dictionary<int, double> probabilities = new Dictionary<int, double>();
                 // Расчёт вероятностей состояний
                 while (k <= n)
                 {
                     if (k < m && k >= 1)
                     {
                         Pk = (Factorial(n) * Math.Pow(ρ, k)) / (Factorial(k) * Factorial(n - k)); // при k < m
-                        switch (k)
-                        {
-                            case 1:
-                                P1 = Pk;
-                                break;
-                            case 2:
-                                P2 = Pk;
-                                break;
-                            case 3:
-                                P3 = Pk;
-                                break;
-                            case 4:
-                                P4 = Pk;
-                                break;
-                            case 5:
-                                P5 = Pk;
-                                break;
-                            case 6:
-                                P6 = Pk;
-                                break;
-                            case 7:
-                                P7 = Pk;
-                                break;
-                        }
+                        probabilities.Add(k, Pk);
                         sum += Pk;
                         k++;
                     }
                     else
                     {
                         Pk = (Factorial(n) * Math.Pow(ρ, k)) / (Factorial(m) * Math.Pow(m, k - m) * Factorial(n - k)); // при k >= m
-                        switch (k)
-                        {
-                            case 1:
-                                P1 = Pk;
-                                break;
-                            case 2:
-                                P2 = Pk;
-                                break;
-                            case 3:
-                                P3 = Pk;
-                                break;
-                            case 4:
-                                P4 = Pk;
-                                break;
-                            case 5:
-                                P5 = Pk;
-                                break;
-                            case 6:
-                                P6 = Pk;
-                                break;
-                            case 7:
-                                P7 = Pk;
-                                break;
-                        }
+                        probabilities.Add(k, Pk);
                         sum += Pk;
                         k++;
                     }
@@ -103,7 +58,12 @@ namespace ЗамкнСМО__расчёт_кол_ва_специалистов
                 // Вероятность, что ничего не сломано
                 P0 = 1 / (1 + sum);
                 //Среднее число оборудования в системе(на обслуживании и в очереди)
-                averKaput = P1 * 1 + P2 * 2 + P3 * 3 + P4 * 4 + P5 * 5 + P6 * 6 + P7 * 7;
+                //averKaput = P1 * 1 + P2 * 2 + P3 * 3 + P4 * 4 + ... Pk * k;
+                averKaput = 0;
+                for (int i = 1; i <= probabilities.Count; i++)
+                {
+                    averKaput += probabilities[i] * i;
+                }
                 //averKaput = n - (1 - P0) / ρ; // Альтернативная формула
                 // Расходы S = Ср. число неисправных ЭВМ ∙ Стоимость простоя за час ∙ 24 часа ∙ 30 дней + 3 смены * кол-во работников * зарплата работника −> Поиск минимума расходов
                 S = (averKaput * N * hours * month) + 3 * m * M;
